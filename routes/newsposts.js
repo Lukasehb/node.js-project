@@ -5,7 +5,7 @@ const db = require('../db');
 // Validatie
 function validatePost(req, res, next) {
     const { title, content } = req.body;
-    if (!title || typeof title !== 'string') return res.status(400).json({ error: 'Titel is verplicht en moet tekst zijn' });
+    if (!title || typeof title !== 'string') return res.status(400).json({ error: 'Titel is verplicht' });
     if (!content) return res.status(400).json({ error: 'Content is verplicht' });
     next();
 }
@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
     db.get("SELECT * FROM newsposts WHERE id = ?", [req.params.id], (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(404).json({ error: 'Post niet gevonden' });
+        if (!row) return res.status(404).json({ error: 'Niet gevonden' });
         res.json(row);
     });
 });
@@ -46,7 +46,7 @@ router.put('/:id', validatePost, (req, res) => {
     });
 });
 
-
+// 5. DELETE
 router.delete('/:id', (req, res) => {
     db.run("DELETE FROM newsposts WHERE id = ?", [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
