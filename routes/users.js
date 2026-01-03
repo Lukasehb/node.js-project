@@ -1,52 +1,70 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
 
-// Mock Database
-let users = [
-    { id: 1, name: "Jan Janssen", email: "jan@example.com" },
-    { id: 2, name: "Piet Peters", email: "piet@example.com" }
-];
+// Validatie functie
+function validategebruiker(req, res, next) {
+    const { naam, email } = req.body;
+    if (!naam || !email) return res.status(400).json({ error: 'Naam en email zijn verplicht' });
+    if (/\d/.test(naam)) return res.status(400).json({ error: 'Naam mag geen cijfers bevatten' });
+    next();
+}
 
-// 1. Lijst ophalen (Read All)
+
 router.get('/', (req, res) => {
-    res.json(users);
+    const { limit = 10, offset = 0, search } = req.query;
+    let sql = "SELECT * FROM gebruikers";
+    let params = [];
+
+    if (search) {
+        sql += " WHERE naam LIKE ?";
+        params.push(`%${search}%`);
+    }
+
+    sql += " LIMIT ? OFFSET ?";
+    params.push(parseInt(limit), parseInt(offset));
+
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
-// 2. Details weergeven (Read One)
+
 router.get('/:id', (req, res) => {
-    const user = users.find(u => u.id === parseInt(req.params.id));
-    if (!user) return res.status(404).send('Gebruiker niet gevonden');
-    res.json(user);
+    db.get("SELECT * FROM gebruikers WHERE id = ?", [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Niet gevonden' });
+        res.json(row);
+    });
 });
 
-// 3. Nieuwe entiteit toevoegen (Create)
-router.post('/', (req, res) => {
-    const newUser = {
-        id: users.length + 1,
-        name: req.body.name,
-        email: req.body.email
-    };
-    users.push(newUser);
-    res.status(201).json(newUser);
+
+router.post('/', validategebruiker, (req, res) => {
+    const { naam, email } = req.body;
+    db.run("INSERT INTO gebruikers (naam, email) VALUES (?, ?)", [naam, email], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, naam, email });
+    });
 });
 
-// 4. Bestaande entiteit updaten (Update)
-router.put('/:id', (req, res) => {
-    const user = users.find(u => u.id === parseInt(req.params.id));
-    if (!user) return res.status(404).send('Gebruiker niet gevonden');
 
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    res.json(user);
+router.put('/:id', validategebruiker, (req, res) => {
+    const { naam, email } = req.body;
+    db.run("UPDATE gebruikers SET naam = ?, email = ? WHERE id = ?", [naam, email, req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Niet gevonden' });
+        res.json({ message: 'gebruiker geüpdatet' });
+    });
 });
 
-// 5. Entiteit verwijderen (Delete)
+
 router.delete('/:id', (req, res) => {
-    const userIndex = users.findIndex(u => u.id === parseInt(req.params.id));
-    if (userIndex === -1) return res.status(404).send('Gebruiker niet gevonden');
-
-    const deletedUser = users.splice(userIndex, 1);
-    res.json(deletedUser);
+    db.run("DELETE FROM gebruikers WHERE id = ?", [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Niet gevonden' });
+        res.json({ message: 'gebruiker verwijderd' });
+    });
 });
 
 module.exports = router;
