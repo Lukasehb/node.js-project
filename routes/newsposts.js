@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Validatie
 function validatePost(req, res, next) {
     const { title, content } = req.body;
     if (!title || typeof title !== 'string') return res.status(400).json({ error: 'Titel is verplicht' });
@@ -10,7 +9,6 @@ function validatePost(req, res, next) {
     next();
 }
 
-// 1. GET ALL + SEARCH + PAGINATION
 router.get('/', (req, res) => {
     // Requirements: Zoeken, Limit en Offset uitlezen uit query parameters
     const { limit = 10, offset = 0, search } = req.query;

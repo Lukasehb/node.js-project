@@ -4,21 +4,23 @@ const db = require('../db');
 
 // Validatie functie
 function validategebruiker(req, res, next) {
-    const { naam, email, leeftijd } = req.body;
+    const { naam, email, leeftijd, charactername } = req.body;
 
     // Requirement: Velden mogen niet leeg zijn
     if (!naam || !email) {
         return res.status(400).json({ error: 'Naam en email zijn verplicht' });
     }
 
-    // Requirement: Een naam (voornaam) kan geen cijfers bevatten
     if (/\d/.test(naam)) {
         return res.status(400).json({ error: 'Naam mag geen cijfers bevatten' });
     }
 
-    // Requirement: Numerieke velden kunnen geen strings aanvaarden
     if (leeftijd && isNaN(leeftijd)) {
         return res.status(400).json({ error: 'Leeftijd moet een getal zijn' });
+    }
+
+    if (/\d/.test(charactername)) {
+        return res.status(400).json({ error: 'Naam mag geen cijfers bevatten' });
     }
 
     next();
@@ -58,21 +60,21 @@ router.get('/:id', (req, res) => {
 
 // 3. TOEVOEGEN (CREATE)
 router.post('/', validategebruiker, (req, res) => {
-    const { naam, email, leeftijd } = req.body;
-    const sql = "INSERT INTO gebruikers (naam, email, leeftijd) VALUES (?, ?, ?)";
+    const { naam, email, leeftijd, charactername } = req.body;
+    const sql = "INSERT INTO gebruikers (naam, email, leeftijd, charactername) VALUES (?, ?, ?,?)";
 
-    db.run(sql, [naam, email, leeftijd], function(err) {
+    db.run(sql, [naam, email, leeftijd, charactername], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, naam, email, leeftijd });
+        res.status(201).json({ id: this.lastID, naam, email, leeftijd, charactername });
     });
 });
 
 // 4. UPDATEN (UPDATE)
 router.put('/:id', validategebruiker, (req, res) => {
-    const { naam, email, leeftijd } = req.body;
-    const sql = "UPDATE gebruikers SET naam = ?, email = ?, leeftijd = ? WHERE id = ?";
+    const { naam, email, leeftijd, charactername } = req.body;
+    const sql = "UPDATE gebruikers SET naam = ?, email = ?, leeftijd = ?, charactername = ?  WHERE id = ?";
 
-    db.run(sql, [naam, email, leeftijd, req.params.id], function(err) {
+    db.run(sql, [naam, email, leeftijd, charactername, req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Niet gevonden' });
         res.json({ message: 'Gebruiker geüpdatet' });
