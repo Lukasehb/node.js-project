@@ -24,7 +24,7 @@ Volg onderstaande stappen om het project lokaal werkend te krijgen:
 4.  **Testen**
     Open je browser en ga naar `http://localhost:3000`. Je ziet hier een documentatiepagina met een overzicht van alle endpoints.
 
-## ⚙️ Functionaliteiten
+##  Functionaliteiten
 
 De API voldoet aan de volgende eisen:
 
