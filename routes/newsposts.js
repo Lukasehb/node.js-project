@@ -10,9 +10,25 @@ function validatePost(req, res, next) {
     next();
 }
 
-// 1. GET ALL
+// 1. GET ALL + SEARCH + PAGINATION
 router.get('/', (req, res) => {
-    db.all("SELECT * FROM newsposts", [], (err, rows) => {
+    // Requirements: Zoeken, Limit en Offset uitlezen uit query parameters
+    const { limit = 10, offset = 0, search } = req.query;
+
+    let sql = "SELECT * FROM newsposts";
+    let params = [];
+
+    // Requirement: Zoeken op waarde van minstens één veld
+    if (search) {
+        sql += " WHERE title LIKE ? OR content LIKE ?";
+        params.push(`%${search}%`, `%${search}%`);
+    }
+
+    // Requirement: Entiteiten teruggeven met een limit en een offset
+    sql += " LIMIT ? OFFSET ?";
+    params.push(parseInt(limit), parseInt(offset));
+
+    db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });

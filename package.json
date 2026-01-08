@@ -22,5 +22,6 @@
     "url": "https://github.com/Lukasehb/node.js-project/issues"
   },
   "homepage": "https://github.com/Lukasehb/node.js-project#readme",
+  "devDependencies": {},
   "description": ""
 }
